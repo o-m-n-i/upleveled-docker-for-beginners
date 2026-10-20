@@ -87,6 +87,10 @@ What happens if you try `-p 8080:80` again for a third container? ✋
 
 > `port is already allocated`. Many containers can use the same *container*
 > port (80), but each *host* port can only be used once (slides 99–104).
+>
+> Docker still **created** that container before it failed to start. Check
+> with `docker ps -a` (status `Created`) and remove it with `docker rm <name>`,
+> or the name stays taken.
 
 ---
 
@@ -133,19 +137,31 @@ Refresh: **your edit is gone.** Why? ✋
 
 ---
 
-## Part E: Clean up
-
-```bash
-docker rm -f web web2
-docker ps -a
-docker container prune            # remove all stopped containers
-```
-
 ## Bonus (if the group is fast)
 
 ```bash
 docker stats                      # live CPU / memory per container (observability!)
+                                  # Ctrl+C to exit
 docker inspect web                # everything Docker knows about a container (JSON)
-docker run -d -p 8080:80 -v "$(pwd)":/usr/share/nginx/html:ro nginx:alpine
-# ^ serve the current folder with nginx (a bind mount). Edit a file, refresh.
 ```
+
+Serve a folder from your laptop with nginx (a **bind mount**):
+
+```bash
+cd ../02-my-first-image           # a folder with an index.html in it
+docker run -d --name live -p 8082:80 -v "$(pwd)":/usr/share/nginx/html:ro nginx:alpine
+```
+
+Open http://localhost:8082, edit `index.html` in your editor, refresh. The
+container sees the file on your laptop directly, no rebuild needed.
+
+## Part E: Clean up
+
+```bash
+docker rm -f web web2 live        # remove the containers from this exercise
+docker ps -a                      # check nothing is left over
+```
+
+> ⚠️ You'll also see `docker container prune` around. It removes **every**
+> stopped container on your machine, including ones from other projects that
+> you only stopped for now. Use it on purpose, not as routine clean-up.

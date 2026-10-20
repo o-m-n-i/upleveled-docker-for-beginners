@@ -36,7 +36,7 @@ docker stop web                           # stop (container still exists)
 docker start web                          # start it again
 docker rm web                             # remove a stopped container
 docker rm -f web                          # stop + remove
-docker container prune                    # remove all stopped containers
+docker container prune                    # remove ALL stopped containers (every project!)
 ```
 
 ## Debugging
