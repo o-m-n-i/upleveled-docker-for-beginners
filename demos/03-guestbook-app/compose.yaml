@@ -12,7 +12,8 @@
 services:
   app:
     build: .
-    image: guestbook:1.0
+    image: guestbook:1.0     # the name to give the image we build
+    pull_policy: build       # always build it, never try to pull it from a registry
     ports:
       - 3000:3000            # HOST:CONTAINER
     environment:
