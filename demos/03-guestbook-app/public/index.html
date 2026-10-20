@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Docker Guestbook</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem; color: #1d2b36; }
+      h1 { color: #1d63ed; }
+      .info { background: #e5f2fc; border-radius: 8px; padding: 0.75rem 1rem; font-family: ui-monospace, monospace; font-size: 0.9rem; }
+      form { display: grid; gap: 0.5rem; margin: 1.5rem 0; }
+      input, textarea, button { font: inherit; padding: 0.5rem; border-radius: 6px; border: 1px solid #b0bec5; }
+      button { background: #1d63ed; color: white; border: none; cursor: pointer; }
+      ul { list-style: none; padding: 0; }
+      li { border-bottom: 1px solid #e0e0e0; padding: 0.6rem 0; }
+      .error { color: #c62828; }
+    </style>
+  </head>
+  <body>
+    <h1>🐳 Docker Guestbook</h1>
+    <p class="info" id="info">Loading container info…</p>
+
+    <form id="form">
+      <input id="name" placeholder="Your name" maxlength="50" required />
+      <textarea id="text" placeholder="Leave a message" maxlength="280" rows="2" required></textarea>
+      <button type="submit">Sign the guestbook</button>
+    </form>
+
+    <p class="error" id="error"></p>
+    <ul id="messages"></ul>
+
+    <script>
+      const errorEl = document.getElementById('error');
+
+      async function loadInfo() {
+        const info = await (await fetch('/api/info')).json();
+        document.getElementById('info').textContent =
+          `Served by container ${info.hostname} · Node ${info.node} · DB host "${info.mongoHost}"`;
+      }
+
+      async function loadMessages() {
+        const res = await fetch('/api/messages');
+        const data = await res.json();
+        if (!res.ok) { errorEl.textContent = data.error; return; }
+        errorEl.textContent = '';
+        const list = document.getElementById('messages');
+        list.replaceChildren(...data.map((m) => {
+          const li = document.createElement('li');
+          li.textContent = `${m.name}: ${m.text}`;
+          return li;
+        }));
+      }
+
+      document.getElementById('form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const body = {
+          name: document.getElementById('name').value,
+          text: document.getElementById('text').value,
+        };
+        const res = await fetch('/api/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) { errorEl.textContent = (await res.json()).error; return; }
+        document.getElementById('text').value = '';
+        loadMessages();
+      });
+
+      loadInfo();
+      loadMessages();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,55 @@
+# The whole stack: our app (built from the Dockerfile) + MongoDB + mongo-express.
+#
+#   docker compose up -d --build     # build the app image and start everything
+#   docker compose ps                # what's running (and is it healthy?)
+#   docker compose logs -f app       # follow the app's logs
+#   docker compose down              # stop + remove containers (data survives)
+#   docker compose down -v           # ...and delete the db-data volume too
+#
+# This file is "infrastructure as code": the whole environment is described in
+# a text file that lives in Git, gets reviewed, and runs the same everywhere.
+
+services:
+  app:
+    build: .
+    image: guestbook:1.0
+    ports:
+      - 3000:3000            # HOST:CONTAINER
+    environment:
+      - MONGO_DB_HOST=mongodb
+      - MONGO_DB_USERNAME=admin
+      - MONGO_DB_PWD=password
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+  mongodb:
+    image: mongo:8
+    ports:
+      - 27017:27017
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password
+    volumes:
+      - db-data:/data/db     # named volume: data survives container removal
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mongo-express:
+    image: mongo-express:1
+    ports:
+      - 8081:8081
+    environment:
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=admin
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=password
+      - ME_CONFIG_MONGODB_SERVER=mongodb
+      - ME_CONFIG_BASICAUTH=false
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+volumes:
+  db-data:

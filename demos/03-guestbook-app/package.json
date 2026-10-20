@@ -1,0 +1,14 @@
+{
+  "name": "guestbook",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Tiny Node.js + MongoDB guestbook used in the Docker for Beginners lesson",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "mongodb": "^6.17.0"
+  }
+}

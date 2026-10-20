@@ -1,0 +1,35 @@
+# Step 1 of the demo project: just the database + a web UI for it.
+# This is the compose version of the two `docker run` commands on slides 131-144.
+#
+#   docker compose -f mongo-compose.yaml up -d
+#   docker compose -f mongo-compose.yaml down
+#
+# Note: the slides start with `version: '3'`. That key is obsolete in Docker
+# Compose v2+ and only produces a warning, so we leave it out.
+
+services:
+  mongodb:
+    image: mongo:8
+    ports:
+      - 27017:27017
+    environment:
+      # Underscore, not hyphen! (The original slides show MONGO-INITDB_..., which Mongo ignores.)
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password
+
+  mongo-express:
+    image: mongo-express:1
+    ports:
+      - 8081:8081
+    environment:
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=admin
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=password
+      # "mongodb" is the service name above: Compose puts both containers on
+      # one network where service names work as hostnames.
+      - ME_CONFIG_MONGODB_SERVER=mongodb
+      # Skip the mongo-express login prompt for the demo
+      - ME_CONFIG_BASICAUTH=false
+    depends_on:
+      - mongodb
+    # mongo-express crashes if Mongo isn't ready yet; just try again
+    restart: unless-stopped
